@@ -80,7 +80,7 @@
   .hero .trust b{color:#fff;font-weight:900;font-size:20px;font-variant-numeric:tabular-nums}
   .hero .art{position:relative;background:
       linear-gradient(90deg,var(--ink) 0%,rgba(10,12,15,.35) 12%,rgba(10,12,15,0) 32%),
-      url('img/The-Turner-Company-van-slide.jpg');background-size:cover;background-position:14% center}
+      url('img/The-Turner-Company-van-slide.jpg?v=2');background-size:cover;background-position:14% center}
   .hero .art .badge{position:absolute;right:22px;bottom:22px;background:rgba(6,8,11,.66);border:1px solid var(--line);
     border-radius:12px;padding:12px 16px;font-size:12px;color:#dfe3e7;backdrop-filter:blur(4px);font-weight:600}
   .hero .art .badge b{color:var(--gold-lt);font-weight:800}
@@ -267,7 +267,7 @@
 <section class="hero">
   <div class="copy">
     <span class="kick">Electrician · HVAC · Generators — Brazos Valley</span>
-    <h1>When the power's on the line, <span class="v">call the Turners.</span></h1>
+    <h1>When the power's on the line, <span class="v">call Turner Electric.</span></h1>
     <p class="sub">Family-owned electrical, HVAC &amp; generator contractor serving Hearne, Bryan–College Station and the Brazos Valley for over a decade. Licensed, insured, and answering the phone <b style="color:#fff">24/7</b>.</p>
     <div class="cta-row">
       <a class="btn btn-gold btn-lg" href="#contact">Request a Free Estimate →</a>
@@ -539,14 +539,34 @@
       { n:'Wheelock', c:[30.8994,-96.3909] },
       { n:'Wixon Valley', c:[30.7621,-96.3189] }
     ];
-    cities.forEach(function(t){
-      L.tooltip({ permanent:true, direction:'center', className:'city-label'+(t.hq?' city-hq':''), opacity:1 })
-       .setLatLng(t.c)
-       .setContent(t.hq ? (t.n+' ★') : t.n)
-       .addTo(map);
+    // priority: lower = shown first when labels collide (Hearne HQ = 0)
+    var PRIO = {Bryan:1,Cameron:2,Rockdale:2,Madisonville:2,Marlin:2,Caldwell:3,Franklin:3,
+      Calvert:4,Bremond:4,Buffalo:4,Rosebud:4,Normangee:5,Lexington:5,Thorndale:5,Holland:5,
+      Lott:6,Kosse:6,Milano:6,Snook:7,Iola:7};
+    var labels = cities.map(function(t){
+      L.circleMarker(t.c, { radius: t.hq?5:3, color:'#0b1f33', weight:1,
+        fillColor: t.hq?'#e2b354':'#2f7fd0', fillOpacity:1 }).addTo(map)
+        .bindTooltip((t.hq?t.n+' ★':t.n)+' — TX', {direction:'top', offset:[0,-4], className:'city-hover'});
+      var tip = L.tooltip({ permanent:true, direction:'right', offset:[7,0],
+        className:'city-label'+(t.hq?' city-hq':''), opacity:1 })
+        .setLatLng(t.c).setContent(t.hq ? (t.n+' ★') : t.n).addTo(map);
+      var len = t.hq ? t.n.length+2 : t.n.length;
+      return { tip:tip, w: len*(t.hq?7.4:6.4)+14, prio: t.hq?0:(PRIO[t.n]||30) };
     });
-    map.fitBounds(L.latLngBounds(cities.map(function(t){ return t.c; })).pad(0.12));
-    setTimeout(function(){ map.invalidateSize(); }, 200);
+    function declutter(){
+      var placed = [];
+      labels.slice().sort(function(a,b){ return a.prio-b.prio; }).forEach(function(o){
+        var el = o.tip.getElement(); if(!el) return;
+        var p = map.latLngToLayerPoint(o.tip.getLatLng());
+        var box = { x1:p.x-3, y1:p.y-12, x2:p.x+o.w+14, y2:p.y+12 };
+        var hit = placed.some(function(q){ return !(box.x2<q.x1||box.x1>q.x2||box.y2<q.y1||box.y1>q.y2); });
+        if (hit) { el.style.display='none'; } else { el.style.display=''; placed.push(box); }
+      });
+    }
+    map.on('zoomend moveend', declutter);
+    map.fitBounds(L.latLngBounds(cities.map(function(t){ return t.c; })).pad(0.1));
+    map.whenReady(function(){ setTimeout(function(){ map.invalidateSize(); declutter(); }, 250); });
+    setTimeout(declutter, 650);
   })();
 </script>
 </body>
