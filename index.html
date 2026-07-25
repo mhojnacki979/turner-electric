@@ -564,9 +564,19 @@
       });
     }
     map.on('zoomend moveend', declutter);
-    map.fitBounds(L.latLngBounds(cities.map(function(t){ return t.c; })).pad(0.1));
-    map.whenReady(function(){ setTimeout(function(){ map.invalidateSize(); declutter(); }, 250); });
-    setTimeout(declutter, 650);
+    function fitAndDeclutter(){
+      map.invalidateSize();
+      map.fitBounds(L.latLngBounds(cities.map(function(t){ return t.c; })).pad(0.1));
+      setTimeout(declutter, 160);
+    }
+    map.whenReady(function(){ setTimeout(fitAndDeclutter, 250); });
+    // recompute once the map is actually scrolled into view (correct size + zoom)
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){ if (e.isIntersecting) fitAndDeclutter(); });
+      }, { threshold: 0.15 });
+      io.observe(document.getElementById('svc-map'));
+    }
   })();
 </script>
 </body>
