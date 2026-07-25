@@ -544,11 +544,7 @@
       Calvert:4,Bremond:4,Buffalo:4,Rosebud:4,Normangee:5,Lexington:5,Thorndale:5,Holland:5,
       Lott:6,Kosse:6,Milano:6,Snook:7,Iola:7};
     var labels = cities.map(function(t){
-      L.circleMarker(t.c, { radius: t.hq?5:3, color:'#0b1f33', weight:1,
-        fillColor: t.hq?'#e2b354':'#2f7fd0', fillOpacity:1 }).addTo(map)
-        .bindTooltip((t.hq?t.n+' ★':t.n)+' — TX', {direction:'top', offset:[0,-4], className:'city-hover'});
-      var tip = L.tooltip({ permanent:true, direction:'right', offset:[7,0],
-        className:'city-label'+(t.hq?' city-hq':''), opacity:1 })
+      var tip = L.tooltip({ permanent:true, direction:'center', className:'city-label'+(t.hq?' city-hq':''), opacity:1 })
         .setLatLng(t.c).setContent(t.hq ? (t.n+' ★') : t.n).addTo(map);
       var len = t.hq ? t.n.length+2 : t.n.length;
       return { tip:tip, w: len*(t.hq?7.4:6.4)+14, prio: t.hq?0:(PRIO[t.n]||30) };
@@ -558,7 +554,7 @@
       labels.slice().sort(function(a,b){ return a.prio-b.prio; }).forEach(function(o){
         var el = o.tip.getElement(); if(!el) return;
         var p = map.latLngToLayerPoint(o.tip.getLatLng());
-        var box = { x1:p.x-3, y1:p.y-12, x2:p.x+o.w+14, y2:p.y+12 };
+        var box = { x1:p.x-o.w/2-4, y1:p.y-12, x2:p.x+o.w/2+4, y2:p.y+12 };
         var hit = placed.some(function(q){ return !(box.x2<q.x1||box.x1>q.x2||box.y2<q.y1||box.y1>q.y2); });
         if (hit) { el.style.display='none'; } else { el.style.display=''; placed.push(box); }
       });
