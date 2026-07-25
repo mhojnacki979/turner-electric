@@ -266,6 +266,12 @@
 </style>
 </head>
 <body>
+<script>/* always open at the top on load/refresh, not the browser remembered scroll spot */
+try{history.scrollRestoration="manual";}catch(e){}
+function __toTop(){window.scrollTo(0,0);}
+addEventListener("load",__toTop);
+addEventListener("pageshow",__toTop);
+</script>
 
 <!-- EMERGENCY BAR -->
 <div class="ebar">
@@ -631,7 +637,40 @@
     }
   })();
 </script>
-<!-- Roofle RoofQuote PRO instant-quote widget (The Turner Company account) -->
+<!-- Roofle RoofQuote PRO instant-quote widget (The Turner Company account).
+     Roofle locks the live widget to Turner's authorized domain, so it renders on their real
+     site (and on localhost) but not on this preview host. -->
 <script src="https://app.roofle.com/roof-quote-pro-widget.js?id=saVy0aB04l7riAPNQKnt2"></script>
+
+<!-- Preview-only stand-in for the roof-quote tab. Auto-hides once the real Roofle widget renders. -->
+<style>
+  #roofMock{display:none}
+  #roofMock.show{display:block}
+  #roofMock .rm-tab{position:fixed;right:0;top:44%;transform:translateY(-50%);z-index:9000;background:#f5821f;color:#fff;
+    font-weight:800;font-size:13px;letter-spacing:.04em;writing-mode:vertical-rl;text-orientation:mixed;padding:18px 9px;
+    border:0;border-radius:8px 0 0 8px;cursor:pointer;box-shadow:-5px 6px 16px rgba(0,0,0,.32)}
+  #roofMock .rm-tab:hover{background:#ff8c26}
+  #roofMock .rm-bubble{position:fixed;right:54px;top:33%;z-index:9000;background:#fff;color:#1a2230;border-radius:12px;
+    padding:15px 42px 15px 18px;box-shadow:0 12px 32px rgba(0,0,0,.35);max-width:240px;font-family:inherit}
+  #roofMock .rm-bubble b{display:block;font-size:16px;margin-bottom:2px}
+  #roofMock .rm-bubble span{font-size:14px;color:#46536a}
+  #roofMock .rm-bubble .rm-x{position:absolute;top:9px;right:12px;color:#9aa4b2;cursor:pointer;font-size:17px;line-height:1}
+  #roofMock .rm-bubble::after{content:"";position:absolute;right:-8px;top:50%;transform:translateY(-50%);border:8px solid transparent;border-left-color:#fff}
+  #roofMock.hide-bubble .rm-bubble{display:none}
+  @media (max-width:600px){ #roofMock .rm-bubble{display:none} #roofMock .rm-tab{font-size:11px;padding:14px 7px} }
+</style>
+<div id="roofMock">
+  <div class="rm-bubble"><span class="rm-x" onclick="document.getElementById('roofMock').classList.add('hide-bubble')">✕</span><b>Need a roof quote?</b><span>Get your price NOW!</span></div>
+  <button class="rm-tab" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Instant Roof Quote</button>
+</div>
+<script>
+  (function(){
+    // Show the stand-in only if the real Roofle launcher didn't render (i.e. on a non-authorized preview host).
+    setTimeout(function(){
+      var real = document.querySelector('.quick-quote-drag-handle, .slide-out-drag-handle, [class*="quick-quote" i]');
+      if(!real){ document.getElementById('roofMock').classList.add('show'); }
+    }, 3000);
+  })();
+</script>
 </body>
 </html>
