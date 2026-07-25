@@ -109,13 +109,13 @@
   .svc::after{content:"";position:absolute;left:0;top:0;height:3px;width:0;background:linear-gradient(90deg,var(--volt),var(--gold));transition:.25s;transform:translateZ(1px);z-index:3}
   /* subtle service photo, corner-anchored + masked away from the text */
   .svc::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-    background-image:var(--svc-img);background-repeat:no-repeat;background-position:right center;background-size:cover;
-    opacity:.58;filter:grayscale(.12) contrast(1.03);
-    -webkit-mask:linear-gradient(90deg, rgba(0,0,0,0) 6%, #000 60%);
-            mask:linear-gradient(90deg, rgba(0,0,0,0) 6%, #000 60%);
-    transition:opacity .3s ease, filter .3s ease}
-  .svc:hover{border-color:rgba(255,255,255,.22);background:var(--panel-2);box-shadow:0 22px 48px rgba(0,0,0,.45)}
-  .svc:hover::before{opacity:.82;filter:grayscale(0) contrast(1.03)}
+    background:
+      linear-gradient(90deg, #12161d 46%, rgba(18,22,29,.62) 66%, rgba(18,22,29,0) 88%),
+      var(--svc-img) right center / cover;
+    filter:grayscale(.08) contrast(1.02);
+    transition:filter .3s ease}
+  .svc:hover{border-color:rgba(255,255,255,.22);box-shadow:0 22px 48px rgba(0,0,0,.45)}
+  .svc:hover::before{filter:grayscale(0) brightness(1.06) contrast(1.02)}
   .svc.tilting{transition:box-shadow .3s ease, border-color .2s ease, background .2s ease}
   .svc > :not(.glare){position:relative;z-index:1;transition:transform .3s cubic-bezier(.22,.61,.36,1)}
   .svc.tilting > :not(.glare){transform:translateZ(22px)}
@@ -130,8 +130,8 @@
   .svc-grid .svc:nth-child(5){--svc-img:url('img/svc-solar.webp')}
   .svc-grid .svc:nth-child(6){--svc-img:url('img/svc-emergency.webp')}
   /* brighten the Generac (generator) photo specifically */
-  .svc-grid .svc:nth-child(2)::before{opacity:.70;filter:brightness(1.25) grayscale(.05) contrast(1.02)}
-  .svc-grid .svc:nth-child(2):hover::before{opacity:.90;filter:brightness(1.28) grayscale(0) contrast(1.02)}
+  .svc-grid .svc:nth-child(2)::before{filter:brightness(1.22) grayscale(.03) contrast(1.02)}
+  .svc-grid .svc:nth-child(2):hover::before{filter:brightness(1.28) grayscale(0) contrast(1.02)}
   .svc:hover::after{width:100%}
   .svc .ic{width:48px;height:48px;border-radius:12px;background:rgba(47,169,255,.13);color:var(--volt);
     display:grid;place-items:center;font-size:23px;margin-bottom:16px}
