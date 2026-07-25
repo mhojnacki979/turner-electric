@@ -266,11 +266,27 @@
 </style>
 </head>
 <body>
-<script>/* always open at the top on load/refresh, not the browser remembered scroll spot */
+<script>/* Always open at the TOP on load/refresh. Overrides the browser's remembered scroll position
+   AND any programmatic scroll (e.g. the map initializing) for a brief window, but yields the
+   instant the visitor scrolls themselves. */
 try{history.scrollRestoration="manual";}catch(e){}
-function __toTop(){window.scrollTo(0,0);}
-addEventListener("load",__toTop);
-addEventListener("pageshow",__toTop);
+(function(){
+  var userMoved=false;
+  function mark(){userMoved=true;}
+  ["wheel","touchmove","keydown","mousedown","pointerdown"].forEach(function(ev){
+    window.addEventListener(ev,mark,{passive:true});
+  });
+  function top(){ if(!userMoved){ window.scrollTo(0,0); } }
+  top();
+  window.addEventListener("DOMContentLoaded",top);
+  window.addEventListener("load",top);
+  window.addEventListener("pageshow",top);
+  var elapsed=0, iv=setInterval(function(){
+    top();
+    elapsed+=60;
+    if(userMoved || elapsed>=900){ clearInterval(iv); }
+  },60);
+})();
 </script>
 
 <!-- EMERGENCY BAR -->
