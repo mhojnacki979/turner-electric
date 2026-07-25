@@ -160,7 +160,7 @@
     background:none;border:0;border-radius:0;color:var(--dim);font-weight:600;font-size:13px;padding:4px 0;letter-spacing:0}
   .towns-all span::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--volt);flex:none}
   /* leaflet dark theme */
-  .leaflet-container{background:#0e1319!important;font-family:inherit}
+  .leaflet-container{background:#e7edf1!important;font-family:inherit}
   .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#12161d;color:#eef1f4;box-shadow:0 6px 20px rgba(0,0,0,.5)}
   .leaflet-popup-content{font-weight:700;font-size:13px;margin:10px 13px}
   .leaflet-bar a{background:#12161d;color:#eef1f4;border-color:rgba(255,255,255,.14)}
@@ -489,7 +489,7 @@
     if (!el || !window.L) { var fb = document.getElementById('map-fallback'); if (fb) fb.style.display = 'grid'; return; }
     var center = [30.72, -96.46];
     var map = L.map('svc-map', { scrollWheelZoom:false, zoomControl:true, attributionControl:true }).setView(center, 9);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom:19, subdomains:'abcd',
       attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
