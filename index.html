@@ -257,6 +257,11 @@
     .svc-grid,.rev-grid,.why,.foot-grid{grid-template-columns:1fr}
     .towns-all{column-count:2}
     section{padding:60px 0}
+    /* service cards become full-width photo tiles on phones */
+    .svc{padding:24px}
+    .svc::before{background:
+      linear-gradient(118deg, rgba(10,12,15,.95) 0%, rgba(10,12,15,.78) 42%, rgba(10,12,15,.42) 72%, rgba(10,12,15,.12) 100%),
+      var(--svc-img) center / cover}
   }
 </style>
 </head>
