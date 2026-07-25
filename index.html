@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Turner Company LLC — Electrician, HVAC &amp; Generators · Brazos Valley</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Family-owned electrical, HVAC and generator contractor serving Hearne, Bryan–College Station and the Brazos Valley. Licensed, insured, Generac dealer, 24/7 emergency service.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  /* ============ TOKENS — merged Storm-Ready + Voltage ============ */
+  :root{
+    --ink:#0a0c0f; --ink-2:#0e1319; --panel:#12161d; --panel-2:#161c25;
+    --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.06);
+    --fg:#eef1f4; --dim:#9aa4ad; --dim-2:#727d87;
+    --volt:#2fa9ff; --volt-deep:#1478d4;
+    --gold:#c8962c; --gold-lt:#e2b354;
+    --good:#43c07a;
+    --maxw:1200px;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--fg);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;display:block}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,h4{margin:0;letter-spacing:-.02em;text-wrap:balance}
+  p{margin:0}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 26px}
+  .kick{display:inline-flex;align-items:center;gap:9px;color:var(--gold-lt);font-weight:800;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+  .kick::before{content:"";width:26px;height:2px;background:var(--gold)}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:11px;font-weight:800;
+    font-size:15px;padding:14px 24px;cursor:pointer;letter-spacing:.01em;transition:.15s;white-space:nowrap}
+  .btn-gold{background:linear-gradient(180deg,var(--gold-lt),var(--gold));color:#1a1204}
+  .btn-gold:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .btn-volt{background:var(--volt);color:#03121f}
+  .btn-volt:hover{background:#4bb6ff;transform:translateY(-1px)}
+  .btn-ghost{background:transparent;border:1.5px solid rgba(255,255,255,.24);color:#fff}
+  .btn-ghost:hover{border-color:var(--volt);color:var(--volt)}
+  .btn-lg{padding:16px 30px;font-size:16px}
+
+  /* ============ EMERGENCY BAR ============ */
+  .ebar{background:linear-gradient(90deg,var(--gold),var(--gold-lt));color:#1a1204;font-weight:800;
+    font-size:13.5px;letter-spacing:.02em;text-align:center;padding:10px 16px;display:flex;
+    gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+  .ebar .dot{width:9px;height:9px;border-radius:50%;background:#1a1204;animation:pulse 2s infinite}
+  .ebar a{text-decoration:underline;text-underline-offset:2px}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(26,18,4,.5)}70%{box-shadow:0 0 0 9px rgba(26,18,4,0)}100%{box-shadow:0 0 0 0 rgba(26,18,4,0)}}
+  @media (prefers-reduced-motion:reduce){.ebar .dot{animation:none}}
+
+  /* ============ HEADER ============ */
+  header.site{position:sticky;top:0;z-index:60;background:rgba(10,12,15,.86);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line)}
+  header.site .wrap{display:flex;align-items:center;gap:20px;min-height:74px}
+  .logo{height:44px;width:auto}
+  header.site .logo{height:64px}
+  nav.main{display:flex;gap:26px;margin-left:14px}
+  nav.main a{color:var(--dim);font-weight:600;font-size:15px;transition:.15s}
+  nav.main a:hover{color:#fff}
+  header.site .actions{margin-left:auto;display:flex;gap:11px;align-items:center}
+  .callnum{display:flex;flex-direction:column;line-height:1.1;text-align:right}
+  .callnum small{color:var(--dim-2);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+  .callnum b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+  .callnum b .p{color:var(--volt)}
+  .hamb{display:none;background:transparent;border:1.5px solid var(--line);border-radius:9px;color:#fff;
+    width:44px;height:44px;font-size:20px;cursor:pointer}
+
+  /* ============ HERO ============ */
+  .hero{position:relative;display:grid;grid-template-columns:1.08fr .92fr;min-height:600px;
+    border-bottom:1px solid var(--line);background:var(--ink)}
+  .hero .copy{padding:70px 34px 64px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2}
+  .hero h1{font-size:clamp(40px,5.4vw,68px);line-height:.98;font-weight:900;margin:20px 0 20px;letter-spacing:-.03em}
+  .hero h1 .g{color:var(--gold-lt)}
+  .hero h1 .v{color:var(--volt)}
+  .hero .sub{color:var(--dim);font-size:19px;max-width:48ch;margin-bottom:30px}
+  .hero .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:34px}
+  .hero .trust{display:flex;gap:26px;flex-wrap:wrap;padding-top:24px;border-top:1px solid var(--line)}
+  .hero .trust div{font-size:13px;color:var(--dim);font-weight:600;display:flex;gap:8px;align-items:center}
+  .hero .trust b{color:#fff;font-weight:900;font-size:20px;font-variant-numeric:tabular-nums}
+  .hero .art{position:relative;background:
+      linear-gradient(90deg,var(--ink) 0%,rgba(10,12,15,.35) 12%,rgba(10,12,15,0) 32%),
+      url('img/The-Turner-Company-van-slide.jpg');background-size:cover;background-position:14% center}
+  .hero .art .badge{position:absolute;right:22px;bottom:22px;background:rgba(6,8,11,.66);border:1px solid var(--line);
+    border-radius:12px;padding:12px 16px;font-size:12px;color:#dfe3e7;backdrop-filter:blur(4px);font-weight:600}
+  .hero .art .badge b{color:var(--gold-lt);font-weight:800}
+
+  /* ============ STAT STRIPE (Voltage) ============ */
+  .stripe{background:var(--ink-2);border-bottom:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr)}
+  .stripe div{padding:30px 26px;border-right:1px solid var(--line)}
+  .stripe div:last-child{border-right:0}
+  .stripe b{display:block;font-size:clamp(30px,4vw,42px);font-weight:900;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+  .stripe b em{font-style:normal;color:var(--volt)}
+  .stripe .gg{color:var(--gold-lt)}
+  .stripe span{color:var(--dim-2);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:7px;display:block}
+
+  /* ============ SECTION SCAFFOLD ============ */
+  section{padding:84px 0}
+  .sec-head{max-width:64ch;margin-bottom:40px}
+  .sec-head h2{font-size:clamp(30px,4vw,46px);font-weight:900;margin:16px 0 12px;line-height:1.02}
+  .sec-head p{color:var(--dim);font-size:18px}
+
+  /* ============ SERVICES ============ */
+  #services{background:var(--ink)}
+  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .svc{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px;transition:.16s;position:relative;overflow:hidden}
+  .svc::after{content:"";position:absolute;left:0;top:0;height:3px;width:0;background:linear-gradient(90deg,var(--volt),var(--gold));transition:.25s}
+  .svc:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.2);background:var(--panel-2)}
+  .svc:hover::after{width:100%}
+  .svc .ic{width:48px;height:48px;border-radius:12px;background:rgba(47,169,255,.13);color:var(--volt);
+    display:grid;place-items:center;font-size:23px;margin-bottom:16px}
+  .svc h3{font-size:19px;margin-bottom:8px}
+  .svc p{color:var(--dim);font-size:14.5px}
+  .svc-more{margin-top:22px;color:var(--dim-2);font-size:14px}
+  .svc-more b{color:var(--fg)}
+
+  /* ============ GENERATOR FEATURE ============ */
+  #generators{background:var(--ink-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .feat{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel)}
+  .feat .fimg{position:relative;min-height:420px;background:url('img/Part-of-the-Robertson-County-Community-bg.jpg');background-size:cover;background-position:center}
+  .feat .fimg .tag{position:absolute;top:20px;left:20px;background:#ff6f00;color:#fff;font-weight:900;font-size:12px;
+    letter-spacing:.06em;text-transform:uppercase;padding:8px 13px;border-radius:9px}
+  .feat .fbody{padding:52px 44px;display:flex;flex-direction:column;justify-content:center}
+  .feat h2{font-size:clamp(28px,3.4vw,38px);font-weight:900;margin:14px 0 14px;line-height:1.03}
+  .feat p{color:var(--dim);font-size:16px;max-width:46ch;margin-bottom:22px}
+  .feat ul{list-style:none;padding:0;margin:0 0 28px;display:grid;gap:11px}
+  .feat li{font-size:15px;font-weight:600;display:flex;gap:11px;align-items:flex-start}
+  .feat li::before{content:"⚡";color:var(--gold-lt)}
+
+  /* ============ WHY US ============ */
+  #about{background:var(--ink)}
+  .why{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .why .w{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px}
+  .why .w .n{font-variant-numeric:tabular-nums;color:var(--gold);font-weight:900;font-size:15px;letter-spacing:.08em}
+  .why .w h3{font-size:18px;margin:14px 0 8px}
+  .why .w p{color:var(--dim);font-size:14px}
+
+  /* ============ REVIEWS ============ */
+  #reviews{background:var(--ink-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .rev{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--volt);border-radius:var(--r);padding:26px}
+  .rev .stars{color:var(--gold-lt);letter-spacing:3px;margin-bottom:12px;font-size:15px}
+  .rev p{font-size:15.5px;line-height:1.5;margin-bottom:16px}
+  .rev cite{font-style:normal;color:var(--dim-2);font-size:13px;font-weight:700}
+  .rev-note{margin-top:20px;font-size:13px;color:var(--dim-2);border-left:3px solid var(--gold);padding-left:14px}
+
+  /* ============ SERVICE AREA ============ */
+  #area{background:var(--ink)}
+  #area .area-grid{display:grid;grid-template-columns:1.55fr .9fr;gap:20px;align-items:stretch}
+  #area .map-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--ink-2);position:relative;min-height:470px}
+  #area #svc-map{position:absolute;inset:0;background:var(--ink-2)}
+  #area .map-side{background:linear-gradient(140deg,var(--panel),var(--ink-2));border:1px solid var(--line);border-radius:18px;padding:34px;display:flex;flex-direction:column;justify-content:center}
+  #area .map-side h3{font-size:20px;font-weight:900;margin-bottom:6px}
+  #area .map-side .lede{color:var(--dim);font-size:14px;margin-bottom:16px}
+  .towns{display:flex;gap:10px;flex-wrap:wrap}
+  .towns span{background:rgba(47,169,255,.1);border:1px solid rgba(47,169,255,.28);color:#bfe0fb;
+    border-radius:999px;padding:7px 15px;font-size:13.5px;font-weight:700}
+  .towns-all{gap:7px;max-height:250px;overflow:auto;padding-right:6px}
+  .towns-all span{font-size:12px;padding:5px 11px}
+  .towns-all::-webkit-scrollbar{width:8px}
+  .towns-all::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px}
+  /* leaflet dark theme */
+  .leaflet-container{background:#0e1319!important;font-family:inherit}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#12161d;color:#eef1f4;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+  .leaflet-popup-content{font-weight:700;font-size:13px;margin:10px 13px}
+  .leaflet-bar a{background:#12161d;color:#eef1f4;border-color:rgba(255,255,255,.14)}
+  .leaflet-bar a:hover{background:#1a2028}
+  .leaflet-control-attribution{background:rgba(10,12,15,.72)!important;color:#8a97a3!important}
+  .leaflet-control-attribution a{color:#9fb6c9!important}
+  .map-fallback{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:30px;color:var(--dim);font-size:14px}
+  .leaflet-container ~ .map-fallback{display:none}
+
+  /* ============ CTA / ESTIMATE ============ */
+  #contact{background:var(--ink-2)}
+  .cta-final{display:grid;grid-template-columns:1.1fr .9fr;gap:0;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+  .cta-final .left{background:linear-gradient(140deg,#12161d,#0b0e13);padding:52px 44px}
+  .cta-final .left h2{font-size:clamp(28px,3.6vw,42px);font-weight:900;margin:14px 0 14px;line-height:1.02}
+  .cta-final .left p{color:var(--dim);font-size:17px;max-width:42ch;margin-bottom:26px}
+  .cta-final .left .row{display:flex;gap:12px;flex-wrap:wrap}
+  .cta-final .form{background:var(--gold);color:#1a1204;padding:44px}
+  .cta-final .form h3{font-size:22px;font-weight:900;margin-bottom:6px}
+  .cta-final .form p{font-size:14px;font-weight:600;opacity:.8;margin-bottom:20px}
+  .cta-final .form label{display:block;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin:0 0 6px}
+  .cta-final .form .field{margin-bottom:14px}
+  .cta-final .form input,.cta-final .form select{width:100%;border:1.5px solid rgba(26,18,4,.28);background:rgba(255,255,255,.75);
+    border-radius:9px;padding:12px 13px;font-size:15px;color:#1a1204;font-family:inherit}
+  .cta-final .form input:focus,.cta-final .form select:focus{outline:2px solid #1a1204;outline-offset:1px}
+  .cta-final .form button{width:100%;background:#16202b;color:#fff;border:0;border-radius:10px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;margin-top:4px}
+  .cta-final .form .fine{font-size:11.5px;opacity:.7;margin-top:10px;font-weight:600}
+
+  /* ============ FOOTER ============ */
+  footer.site{background:var(--ink);border-top:1px solid var(--line);padding:56px 0 30px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
+  footer.site .logo{margin-bottom:16px}
+  footer.site .about{color:var(--dim);font-size:14px;max-width:34ch}
+  footer.site h4{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim-2);margin-bottom:14px}
+  footer.site ul{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+  footer.site li{color:var(--dim);font-size:14px}
+  footer.site li a:hover{color:#fff}
+  footer.site .contact b{color:#fff}
+  .foot-bottom{border-top:1px solid var(--line);margin-top:40px;padding-top:22px;display:flex;justify-content:space-between;
+    gap:14px;flex-wrap:wrap;color:var(--dim-2);font-size:12.5px}
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width:940px){
+    .hero{grid-template-columns:1fr}
+    .hero .art{min-height:300px;order:-1}
+    .svc-grid,.rev-grid{grid-template-columns:1fr 1fr}
+    .why{grid-template-columns:1fr 1fr}
+    .feat,.cta-final,#area .area-grid{grid-template-columns:1fr}
+    .feat .fimg{min-height:260px}
+    .foot-grid{grid-template-columns:1fr 1fr}
+    nav.main{display:none;position:absolute;top:74px;left:0;right:0;flex-direction:column;gap:0;
+      background:var(--ink-2);border-bottom:1px solid var(--line);padding:8px 26px}
+    nav.main.open{display:flex}
+    nav.main a{padding:13px 0;border-bottom:1px solid var(--line-2)}
+    .hamb{display:block;margin-left:auto;order:3}
+    header.site .actions{margin-left:0}
+    .callnum{display:none}
+  }
+  @media (max-width:600px){
+    .stripe{grid-template-columns:1fr 1fr}
+    .stripe div:nth-child(2){border-right:0}
+    .stripe div:nth-child(1),.stripe div:nth-child(2){border-bottom:1px solid var(--line)}
+    .svc-grid,.rev-grid,.why,.foot-grid{grid-template-columns:1fr}
+    section{padding:60px 0}
+  }
+</style>
+</head>
+<body>
+
+<!-- EMERGENCY BAR -->
+<div class="ebar">
+  <span class="dot" aria-hidden="true"></span>
+  24/7 EMERGENCY ELECTRICIAN — Power out or a hazard? <a href="tel:+19798594696">Call (979) 859-4696 now</a>
+</div>
+
+<!-- HEADER -->
+<header class="site">
+  <div class="wrap">
+    <a href="#top" aria-label="The Turner Company home"><img class="logo" src="img/turnerco-logo.png" alt="The Turner Company LLC"></a>
+    <nav class="main" id="nav">
+      <a href="#services">Services</a>
+      <a href="#generators">Generators</a>
+      <a href="#about">Why Us</a>
+      <a href="#area">Service Area</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="actions">
+      <a class="callnum" href="tel:+19798594696"><small>Call us 24/7</small><b>(979)&nbsp;<span class="p">859-4696</span></b></a>
+      <a class="btn btn-gold" href="#contact">Free Estimate</a>
+      <button class="hamb" id="hamb" aria-label="Menu" aria-expanded="false">☰</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<main id="top">
+<section class="hero">
+  <div class="copy">
+    <span class="kick">Electrician · HVAC · Generators — Brazos Valley</span>
+    <h1>When the power's on the line, <span class="v">call the Turners.</span></h1>
+    <p class="sub">Family-owned electrical, HVAC &amp; generator contractor serving Hearne, Bryan–College Station and the Brazos Valley for over a decade. Licensed, insured, and answering the phone <b style="color:#fff">24/7</b>.</p>
+    <div class="cta-row">
+      <a class="btn btn-gold btn-lg" href="#contact">Request a Free Estimate →</a>
+      <a class="btn btn-volt btn-lg" href="tel:+19798594696">📞 Call (979) 859-4696</a>
+    </div>
+    <div class="trust">
+      <div><b>10+</b>&nbsp;Years local</div>
+      <div><b>24/7</b>&nbsp;Emergency</div>
+      <div>✓&nbsp;Licensed &amp; Insured <span style="color:var(--dim-2)">(TDLR)</span></div>
+      <div><b style="color:var(--gold-lt);font-size:16px">Generac</b>&nbsp;Dealer</div>
+    </div>
+  </div>
+  <div class="art" role="img" aria-label="The Turner Company service truck and Generac trailer parked at a Brazos Valley home">
+    <div class="badge"><b>Generac</b> Authorized Dealer · Family-owned · Veteran-supporting</div>
+  </div>
+</section>
+
+<!-- STAT STRIPE -->
+<div class="stripe">
+  <div><b>10<em>+</em></b><span>Years in the Valley</span></div>
+  <div><b>24/7</b><span>Emergency service</span></div>
+  <div><b>100<em>%</em></b><span>Licensed &amp; insured</span></div>
+  <div><b class="gg">Generac</b><span>Authorized dealer</span></div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kick">What we handle</span>
+      <h2>One local crew for everything electrical.</h2>
+      <p>Residential and commercial — from a flickering outlet to a whole-home generator, the Turner Company does it all, done to code and done right.</p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc"><div class="ic">⚡</div><h3>Electrical Service &amp; Repair</h3><p>Panels, breakers, wiring, outlets, lighting and troubleshooting for homes and businesses.</p></div>
+      <div class="svc"><div class="ic">🔋</div><h3>Generator Sales &amp; Install</h3><p>Whole-home and commercial standby generators. Proud Generac authorized dealer, install to repair.</p></div>
+      <div class="svc"><div class="ic">❄️</div><h3>HVAC &amp; Refrigeration</h3><p>Heating, air conditioning and commercial refrigeration — sales, service and maintenance.</p></div>
+      <div class="svc"><div class="ic">🚗</div><h3>EV Charger Installation</h3><p>Level 2 home chargers. We confirm your power supply can handle it, then install it cleanly.</p></div>
+      <div class="svc"><div class="ic">☀️</div><h3>Solar Panel Installation</h3><p>Grid-tie and battery-backup solar to cut energy costs, with expert rooftop setup guidance.</p></div>
+      <div class="svc"><div class="ic">🛟</div><h3>24-Hour Emergency</h3><p>After-hours outages and electrical hazards — we answer around the clock, every day.</p></div>
+    </div>
+    <p class="svc-more"><b>Also:</b> outlet installation &amp; repair · rewiring &amp; code upgrades · panel &amp; breaker upgrades · lighting installs · fixture &amp; ceiling-fan wiring · generator fleet management.</p>
+  </div>
+</section>
+
+<!-- GENERATOR FEATURE -->
+<section id="generators">
+  <div class="wrap">
+    <div class="feat">
+      <div class="fimg" role="img" aria-label="Generac whole-home standby generator installed in a rural Texas yard">
+        <span class="tag">Generac Authorized</span>
+      </div>
+      <div class="fbody">
+        <span class="kick">Never lose power again</span>
+        <h2>Whole-home generators, installed right.</h2>
+        <p>A storm shouldn't shut your home — or your business — down. As an authorized Generac dealer, we size, install and service standby generators that switch on automatically the moment the grid goes out.</p>
+        <ul>
+          <li>Whole-home &amp; commercial standby systems</li>
+          <li>Automatic switchover — no cords, no waiting</li>
+          <li>Local install, repair &amp; generator fleet management</li>
+        </ul>
+        <div><a class="btn btn-gold btn-lg" href="#contact">Get a Generator Quote →</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kick">Part of the Robertson County community</span>
+      <h2>The name your neighbors already trust.</h2>
+      <p>We've spent over ten years serving the rural communities of Texas and the larger Bryan–College Station, Robertson County and Brazos County areas. Here's why folks call us first.</p>
+    </div>
+    <div class="why">
+      <div class="w"><div class="n">01</div><h3>Family owned &amp; operated</h3><p>Over a decade of hands-on residential and commercial electrical experience — you deal with the family, not a call center.</p></div>
+      <div class="w"><div class="n">02</div><h3>Licensed &amp; insured</h3><p>Fully licensed and insured, including our TDLR license. The work is done to code and protected.</p></div>
+      <div class="w"><div class="n">03</div><h3>Generac authorized dealer</h3><p>Certified to sell, install and service Generac home and commercial standby generators.</p></div>
+      <div class="w"><div class="n">04</div><h3>Local &amp; community-minded</h3><p>Proud to support Veterans organizations and provide personalized service — including your Texas A&amp;M electrician.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kick">What customers say</span>
+      <h2>Straight prices. Work that lasts.</h2>
+    </div>
+    <div class="rev-grid">
+      <div class="rev"><div class="stars">★★★★★</div><p>"Power went out during a storm and Turner had a generator keeping our whole house running by the next morning. Straight prices and did exactly what they said."</p><cite>▚ Real Google review — Robertson County</cite></div>
+      <div class="rev"><div class="stars">★★★★★</div><p>"Showed up on time, explained everything, and fixed our electrical panel the same day. Couldn't ask for better local service."</p><cite>▚ Real Google review — Bryan, TX</cite></div>
+      <div class="rev"><div class="stars">★★★★★</div><p>"Installed a Generac for us and handled the whole thing start to finish. Professional, fair, and genuinely nice people."</p><cite>▚ Real Google review — Hearne, TX</cite></div>
+    </div>
+    <p class="rev-note">Placeholder reviews shown (▚). We'll pull your real 5-star Google reviews in at build.</p>
+  </div>
+</section>
+
+<!-- SERVICE AREA -->
+<section id="area">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kick">Where we work</span>
+      <h2>Serving Hearne, Bryan–College Station &amp; the Brazos Valley.</h2>
+      <p>From our home base in Hearne out across Robertson and Brazos counties. If you're inside the shaded area we've got you covered — nearby but not sure? Just give us a call.</p>
+    </div>
+    <div class="area-grid">
+      <div class="map-card">
+        <div id="svc-map" role="img" aria-label="Map of The Turner Company service area covering Hearne, Bryan, College Station and the surrounding Brazos Valley"></div>
+        <div class="map-fallback" id="map-fallback">Service area: Hearne, Bryan–College Station, Robertson County, Brazos County and surrounding communities. (Map needs an internet connection to load.)</div>
+      </div>
+      <div class="map-side">
+        <h3>37 cities across the Brazos Valley</h3>
+        <p class="lede">From our Hearne home base out across the Brazos Valley and Central Texas — residential and commercial.</p>
+        <div class="towns towns-all">
+          <span>Hearne</span><span>Bedias</span><span>Blue</span><span>Bremond</span><span>Bryan</span><span>Buffalo</span><span>Caldwell</span><span>Calvert</span><span>Cameron</span><span>Cooks Point</span><span>Dime Box</span><span>Franklin</span><span>Gause</span><span>Hilltop Lakes</span><span>Holland</span><span>Iola</span><span>Kosse</span><span>Kurten</span><span>Lake Limestone</span><span>Lexington</span><span>Lott</span><span>Madisonville</span><span>Marlin</span><span>Marquez</span><span>Milano</span><span>New Baden</span><span>Normangee</span><span>North Zulch</span><span>Ridge</span><span>Rockdale</span><span>Rosebud</span><span>Snook</span><span>Summerville</span><span>Thorndale</span><span>Thrall</span><span>Wheelock</span><span>Wixon Valley</span>
+        </div>
+        <a class="btn btn-gold btn-lg" style="margin-top:20px" href="#contact">Check your address →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / ESTIMATE -->
+<section id="contact">
+  <div class="wrap">
+    <div class="cta-final">
+      <div class="left">
+        <span class="kick">Let's get to work</span>
+        <h2>Got an electrical, HVAC or generator need?</h2>
+        <p>Call the family that's been powering the Brazos Valley for over a decade. Free estimates, fair prices, no pressure.</p>
+        <div class="row">
+          <a class="btn btn-volt btn-lg" href="tel:+19798594696">📞 (979) 859-4696</a>
+          <a class="btn btn-ghost btn-lg" href="mailto:Chad@TheTurnerCompanyLLC.com">Email us</a>
+        </div>
+        <p style="color:var(--dim-2);font-size:13.5px;margin-top:22px">Available 24/7 for emergencies · Chad@TheTurnerCompanyLLC.com</p>
+      </div>
+      <form class="form" onsubmit="return false">
+        <h3>Request a free estimate</h3>
+        <p>Tell us what's going on — we'll get right back to you.</p>
+        <div class="field"><label for="n">Name</label><input id="n" type="text" placeholder="Your name"></div>
+        <div class="field"><label for="ph">Phone</label><input id="ph" type="tel" placeholder="(979) 000-0000"></div>
+        <div class="field"><label for="sv">What do you need?</label>
+          <select id="sv">
+            <option>Electrical service or repair</option>
+            <option>Generator (Generac)</option>
+            <option>Heating &amp; air (HVAC)</option>
+            <option>EV charger install</option>
+            <option>Solar panel install</option>
+            <option>24/7 emergency</option>
+          </select>
+        </div>
+        <button type="submit">Request My Free Estimate →</button>
+        <p class="fine">▚ Demo form — wire to Turner's inbox at build.</p>
+      </form>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- FOOTER -->
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <img class="logo" src="img/turnerco-logo.png" alt="The Turner Company LLC">
+        <p class="about">Family-owned electrical, HVAC and generator contractor proudly serving Hearne, Bryan–College Station and the greater Brazos Valley.</p>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Electrical</a></li>
+          <li><a href="#generators">Generators</a></li>
+          <li><a href="#services">HVAC &amp; Refrigeration</a></li>
+          <li><a href="#services">EV Chargers</a></li>
+          <li><a href="#services">Solar</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#about">Why Us</a></li>
+          <li><a href="#area">Service Area</a></li>
+          <li><a href="#reviews">Reviews</a></li>
+          <li>Licensed &amp; Insured · TDLR</li>
+          <li>Generac Authorized Dealer</li>
+        </ul>
+      </div>
+      <div class="contact">
+        <h4>Contact</h4>
+        <ul>
+          <li><b>Call 24/7</b></li>
+          <li><a href="tel:+19798594696" style="color:var(--gold-lt);font-weight:800;font-size:16px">(979) 859-4696</a></li>
+          <li><a href="mailto:Chad@TheTurnerCompanyLLC.com">Chad@TheTurnerCompanyLLC.com</a></li>
+          <li>Hearne, TX &amp; Brazos Valley</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 The Turner Company LLC · All rights reserved.</span>
+      <span>Electrician · HVAC · Generators · 24/7 Emergency Service</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // mobile menu
+  const hamb = document.getElementById('hamb');
+  const nav = document.getElementById('nav');
+  hamb.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    hamb.setAttribute('aria-expanded', open);
+    hamb.textContent = open ? '✕' : '☰';
+  });
+  nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    nav.classList.remove('open'); hamb.textContent = '☰'; hamb.setAttribute('aria-expanded', false);
+  }));
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  (function(){
+    var el = document.getElementById('svc-map');
+    if (!el || !window.L) { var fb = document.getElementById('map-fallback'); if (fb) fb.style.display = 'grid'; return; }
+    var center = [30.72, -96.46];
+    var map = L.map('svc-map', { scrollWheelZoom:false, zoomControl:true, attributionControl:true }).setView(center, 9);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom:19, subdomains:'abcd',
+      attribution:'&copy; OpenStreetMap contributors &copy; CARTO'
+    }).addTo(map);
+    // all 37 cities from the current Turner Company service-area page
+    var cities = [
+      { n:'Hearne', c:[30.8789,-96.5962], hq:true },
+      { n:'Bedias', c:[30.7757,-95.9494] },
+      { n:'Blue', c:[30.3928,-97.1407] },
+      { n:'Bremond', c:[31.1662,-96.6760] },
+      { n:'Bryan', c:[30.6744,-96.3700] },
+      { n:'Buffalo', c:[31.4635,-96.0641] },
+      { n:'Caldwell', c:[30.5321,-96.6934] },
+      { n:'Calvert', c:[30.9780,-96.6739] },
+      { n:'Cameron', c:[30.8532,-96.9769] },
+      { n:'Cooks Point', c:[30.5960,-96.6097] },
+      { n:'Dime Box', c:[30.3567,-96.8251] },
+      { n:'Franklin', c:[31.0365,-96.4670] },
+      { n:'Gause', c:[30.7875,-96.7209] },
+      { n:'Hilltop Lakes', c:[31.0794,-96.2039] },
+      { n:'Holland', c:[30.8793,-97.4049] },
+      { n:'Iola', c:[30.7712,-96.0756] },
+      { n:'Kosse', c:[31.3077,-96.6319] },
+      { n:'Kurten', c:[30.7871,-96.2641] },
+      { n:'Lake Limestone', c:[31.4033,-96.3337] },
+      { n:'Lexington', c:[30.4152,-97.0098] },
+      { n:'Lott', c:[31.2061,-97.0327] },
+      { n:'Madisonville', c:[30.9499,-95.9128] },
+      { n:'Marlin', c:[31.3080,-96.8909] },
+      { n:'Marquez', c:[31.2393,-96.2536] },
+      { n:'Milano', c:[30.7106,-96.8647] },
+      { n:'New Baden', c:[31.0510,-96.4291] },
+      { n:'Normangee', c:[31.0297,-96.1170] },
+      { n:'North Zulch', c:[30.9170,-96.1086] },
+      { n:'Ridge', c:[31.0900,-96.6300] },
+      { n:'Rockdale', c:[30.6549,-97.0058] },
+      { n:'Rosebud', c:[31.0747,-96.9756] },
+      { n:'Snook', c:[30.4892,-96.4654] },
+      { n:'Summerville', c:[30.4888,-95.9869] },
+      { n:'Thorndale', c:[30.6139,-97.2061] },
+      { n:'Thrall', c:[30.5878,-97.2985] },
+      { n:'Wheelock', c:[30.8994,-96.3909] },
+      { n:'Wixon Valley', c:[30.7621,-96.3189] }
+    ];
+    cities.forEach(function(t){
+      L.circleMarker(t.c, {
+        radius: t.hq ? 9 : 5, color:'#0a0c0f', weight:1.5,
+        fillColor: t.hq ? '#e2b354' : '#2fa9ff', fillOpacity:1
+      }).addTo(map)
+       .bindTooltip(t.n, { direction:'top', offset:[0,-4] })
+       .bindPopup('<b>'+t.n+', TX</b>'+(t.hq ? ' — Home Base' : ''));
+    });
+    map.fitBounds(L.latLngBounds(cities.map(function(t){ return t.c; })).pad(0.12));
+    setTimeout(function(){ map.invalidateSize(); }, 200);
+  })();
+</script>
+</body>
+</html>
