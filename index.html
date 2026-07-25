@@ -129,6 +129,9 @@
   .svc-grid .svc:nth-child(4){--svc-img:url('img/svc-ev.webp')}
   .svc-grid .svc:nth-child(5){--svc-img:url('img/svc-solar.webp')}
   .svc-grid .svc:nth-child(6){--svc-img:url('img/svc-emergency.webp')}
+  /* brighten the Generac (generator) photo specifically */
+  .svc-grid .svc:nth-child(2)::before{opacity:.70;filter:brightness(1.25) grayscale(.05) contrast(1.02)}
+  .svc-grid .svc:nth-child(2):hover::before{opacity:.90;filter:brightness(1.28) grayscale(0) contrast(1.02)}
   .svc:hover::after{width:100%}
   .svc .ic{width:48px;height:48px;border-radius:12px;background:rgba(47,169,255,.13);color:var(--volt);
     display:grid;place-items:center;font-size:23px;margin-bottom:16px}
